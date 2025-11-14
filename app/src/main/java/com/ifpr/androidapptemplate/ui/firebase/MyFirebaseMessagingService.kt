@@ -28,8 +28,9 @@ class MyFirebaseMessagingService : FirebaseMessagingService() {
         remoteMessage.data.isNotEmpty().let {
             Log.d(TAG, "Message data payload: ${remoteMessage.data}")
             remoteMessage.data["status"]?.let { status ->
-                sendNotification(remoteMessage.data["message"])
+                    sendStatusNotification(status)
             }
+
         }
 
         // Verifique se a mensagem contém uma carga útil de notificação.
@@ -52,7 +53,7 @@ class MyFirebaseMessagingService : FirebaseMessagingService() {
 
         val channelId = "fcm_default_channel"
         val notificationBuilder = NotificationCompat.Builder(this, channelId)
-            .setSmallIcon(R.drawable.ic_notifications_black_24dp)
+            .setSmallIcon(R.drawable.ic_logo)
             .setContentTitle(getString(R.string.app_name))
             .setContentText(messageBody)
             .setAutoCancel(true)
@@ -68,5 +69,55 @@ class MyFirebaseMessagingService : FirebaseMessagingService() {
 
         notificationManager.notify(0, notificationBuilder.build())
     }
+    private fun sendStatusNotification(status: String) {
+        val intent = Intent(this, MainActivity::class.java)
+        val pendingIntent = PendingIntent.getActivity(this, 0, intent, PendingIntent.FLAG_IMMUTABLE)
 
+        val channelId = "status_channel"
+        val notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            val channel = NotificationChannel(channelId, "Status do Pedido", NotificationManager.IMPORTANCE_DEFAULT)
+            notificationManager.createNotificationChannel(channel)
+        }
+
+        val targetProgress = when (status) {
+            "vem ai" -> 33
+            "em andamento" -> 66
+            "feito" -> 100
+            else -> 0
+        }
+
+        val remoteViews = RemoteViews(packageName, R.layout.custom_notification)
+        val builder = NotificationCompat.Builder(this, channelId)
+            .setSmallIcon(R.drawable.ic_notifications_black_24dp)
+            .setCustomContentView(remoteViews)
+            .setContentIntent(pendingIntent)
+            .setAutoCancel(false)
+            .setOngoing(true)
+
+        val notificationId = 1001
+        var currentProgress = 0
+
+        val handler = android.os.Handler(mainLooper)
+        val updateRunnable = object : Runnable {
+            override fun run() {
+                if (currentProgress <= targetProgress) {
+                    remoteViews.setTextViewText(R.id.status_text, "Pedido: $status ($currentProgress%)")
+                    remoteViews.setProgressBar(R.id.progress_bar, 100, currentProgress, false)
+                    notificationManager.notify(notificationId, builder.build())
+                    currentProgress++
+                    handler.postDelayed(this, 50L)
+                }
+            }
+        }
+
+        handler.post(updateRunnable)
+
+        if (targetProgress == 100) {
+            handler.postDelayed({
+                notificationManager.cancel(notificationId)
+            }, 3000)
+        }
+    }
 }
