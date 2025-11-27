@@ -1,10 +1,10 @@
-<?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:id="@+id/ai_logic_layout"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
+    android:background="#E8F5E9"
     android:fitsSystemWindows="true">
 
     <LinearLayout
@@ -29,6 +29,7 @@
             android:id="@+id/btn_select_image"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:backgroundTint="#2E7D32"
             android:text="Selecionar Imagem"
             android:layout_marginTop="8dp" />
 
@@ -46,6 +47,7 @@
             android:id="@+id/btn_generate"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:backgroundTint="#2E7D32"
             android:text="Gerar resposta" />
 
         <TextView
